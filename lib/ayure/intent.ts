@@ -25,11 +25,11 @@ const STOP_WORDS = new Set([
 ]);
 
 const intentRules: Array<{ kind: IntentKind; terms: string[] }> = [
-  { kind: "buy", terms: ["buy", "purchase", "acquire", "house", "property"] },
-  { kind: "find_operator", terms: ["operator", "manager", "manage", "cohost", "co-host"] },
-  { kind: "transform", terms: ["transform", "renovate", "design", "improve", "listing", "perform better"] },
-  { kind: "invest", terms: ["invest", "investment", "return", "portfolio", "budget"] },
-  { kind: "offer_services", terms: ["offer", "services", "clients", "work", "contractor", "designer", "photographer"] },
+  { kind: "buy", terms: ["buy", "purchase", "acquire", "acquisition", "for sale"] },
+  { kind: "find_operator", terms: ["operator", "manager", "manage", "cohost", "co-host", "property manager"] },
+  { kind: "transform", terms: ["transform", "renovate", "renovation", "design", "improve", "listing", "perform better"] },
+  { kind: "invest", terms: ["invest", "investment", "return", "portfolio", "capital"] },
+  { kind: "offer_services", terms: ["offer services", "clients", "contractor", "designer", "photographer", "service provider"] },
 ];
 
 function normalize(value: string) {
@@ -49,19 +49,26 @@ function detectIntent(query: string, explicit?: IntentKind): IntentKind {
 
 function detectBudget(query: string): number | undefined {
   const normalized = normalize(query);
-  const match = normalized.match(/\$?\s?(\d{2,7}(?:[,.]\d{3})?|\d+(?:\.\d+)?)\s?(k|m)?/i);
-  if (!match) return undefined;
-  const raw = Number(match[1].replace(/,/g, ""));
-  if (!Number.isFinite(raw)) return undefined;
-  const suffix = match[2]?.toLowerCase();
-  if (suffix === "k") return Math.round(raw * 1000);
-  if (suffix === "m") return Math.round(raw * 1000000);
-  return raw >= 10000 ? Math.round(raw) : undefined;
+  const matcher = /\$?\s?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(k|m)?\b/gi;
+
+  for (const match of normalized.matchAll(matcher)) {
+    const raw = Number(match[1].replace(/,/g, ""));
+    if (!Number.isFinite(raw)) continue;
+
+    const suffix = match[2]?.toLowerCase();
+    const hasCurrencyMarker = match[0].includes("$");
+    if (suffix === "k") return Math.round(raw * 1000);
+    if (suffix === "m") return Math.round(raw * 1000000);
+    if (hasCurrencyMarker || raw >= 10000) return Math.round(raw);
+  }
+
+  return undefined;
 }
 
 function detectLocation(query: string): string | undefined {
   const patterns = [
-    /(?:in|near|around|within\s+\d+\s+hours?\s+of)\s+([a-z][a-z\s.-]{2,40})(?:$|,|\.|\s+under\s+|\s+with\s+)/i,
+    /within\s+\d+(?:\.\d+)?\s+hours?\s+of\s+([a-z][a-z\s.'-]{1,40}?)(?=$|,|\.|\s+(?:under|with|for|and|that|where|who|at)\b|\s+\$?\d[\d,.]*\s*(?:k|m)?\b)/i,
+    /(?:in|near|around)\s+([a-z][a-z\s.'-]{1,40}?)(?=$|,|\.|\s+(?:under|with|for|and|that|where|who|at)\b|\s+\$?\d[\d,.]*\s*(?:k|m)?\b)/i,
   ];
   for (const pattern of patterns) {
     const match = query.match(pattern);

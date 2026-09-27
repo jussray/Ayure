@@ -67,9 +67,11 @@ function detectBudget(query: string): number | undefined {
 }
 
 function detectLocation(query: string): string | undefined {
+  const stop = "(?=$|,|\\.|\\s+(?:under|with|for|and|that|where|who|at)\\b|\\s+\\$?\\d[\\d,.]*\\s*(?:k|m)?\\b)";
   const patterns = [
-    /within\s+\d+(?:\.\d+)?\s+hours?\s+of\s+([a-z][a-z\s.'-]{1,40}?)(?=$|,|\.|\s+(?:under|with|for|and|that|where|who|at)\b|\s+\$?\d[\d,.]*\s*(?:k|m)?\b)/i,
-    /(?:in|near|around)\s+([a-z][a-z\s.'-]{1,40}?)(?=$|,|\.|\s+(?:under|with|for|and|that|where|who|at)\b|\s+\$?\d[\d,.]*\s*(?:k|m)?\b)/i,
+    new RegExp(`within\\s+\\d+(?:\\.\\d+)?\\s+hours?\\s+of\\s+([a-z][a-z\\s.'-]{1,40}?)${stop}`, "i"),
+    new RegExp(`(?:near|around)\\s+([a-z][a-z\\s.'-]{1,40}?)${stop}`, "i"),
+    new RegExp(`\\bin\\s+(?!a\\b|an\\b|the\\b)([a-z][a-z\\s.'-]{1,40}?)${stop}`, "i"),
   ];
   for (const pattern of patterns) {
     const match = query.match(pattern);

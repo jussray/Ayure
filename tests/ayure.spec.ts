@@ -14,6 +14,26 @@ test("AYURE intent search explains matches and proof", async ({ page }) => {
   await expect(page.getByText(/Matches your goal|Relevant property/).first()).toBeVisible();
 });
 
+test("natural language intent favors the user action over generic property words", async ({ request }) => {
+  const response = await request.post("/api/match", {
+    data: { query: "I want to invest in a property near Pittsburgh" },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.intent.kind).toBe("invest");
+  expect(payload.intent.location).toBe("Pittsburgh");
+});
+
+test("budget parsing skips unrelated small numbers and finds the actual budget", async ({ request }) => {
+  const response = await request.post("/api/match", {
+    data: { query: "I want a 3 bed short-term rental near Pittsburgh under $250k" },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.intent.budgetMax).toBe(250000);
+  expect(payload.intent.location).toBe("Pittsburgh");
+});
+
 test("AYURE join flow preserves role state and enables a real submission only when valid", async ({ page }) => {
   await page.goto("/join?goal=Connect%20me%20with%20an%20operator");
 

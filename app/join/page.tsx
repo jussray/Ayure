@@ -1,6 +1,12 @@
 import JoinFlow from "./JoinFlow";
 
-export default function JoinPage({ searchParams }: { searchParams?: { goal?: string } }) {
+type JoinSearchParams = Promise<{ goal?: string | string[] }>;
+
+export default async function JoinPage({ searchParams }: { searchParams?: JoinSearchParams }) {
+  const params = searchParams ? await searchParams : undefined;
+  const rawGoal = params?.goal;
+  const initialGoal = Array.isArray(rawGoal) ? rawGoal[0] ?? "" : rawGoal ?? "";
+
   return (
     <main className="join-page">
       <header className="join-header">
@@ -11,7 +17,7 @@ export default function JoinPage({ searchParams }: { searchParams?: { goal?: str
         <p className="eyebrow">FOUNDING NETWORK</p>
         <h1>Tell AYURE where you fit.</h1>
         <p>Start with your role and your intention. AYURE uses that to route you toward the right property, person, service, or opportunity.</p>
-        <JoinFlow initialGoal={searchParams?.goal ?? ""} />
+        <JoinFlow initialGoal={initialGoal} />
       </section>
     </main>
   );

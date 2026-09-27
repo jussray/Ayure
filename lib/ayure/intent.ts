@@ -50,8 +50,9 @@ function detectIntent(query: string, explicit?: IntentKind): IntentKind {
 function detectBudget(query: string): number | undefined {
   const normalized = normalize(query);
   const matcher = /\$?\s?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(k|m)?\b/gi;
+  let match: RegExpExecArray | null;
 
-  for (const match of normalized.matchAll(matcher)) {
+  while ((match = matcher.exec(normalized)) !== null) {
     const raw = Number(match[1].replace(/,/g, ""));
     if (!Number.isFinite(raw)) continue;
 

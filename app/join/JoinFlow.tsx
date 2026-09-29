@@ -10,19 +10,32 @@ const roleOptions = [
   ["service_provider", "Offer services"],
 ] as const;
 
+const MAX_NAME_LENGTH = 120;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_GOAL_LENGTH = 2_000;
+
 type Role = (typeof roleOptions)[number][0];
 
 export default function JoinFlow({ initialGoal = "" }: { initialGoal?: string }) {
+  const safeInitialGoal = initialGoal.slice(0, MAX_GOAL_LENGTH);
   const [role, setRole] = useState<Role | "">("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [goal, setGoal] = useState(initialGoal);
+  const [goal, setGoal] = useState(safeInitialGoal);
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const [error, setError] = useState("");
   const [receipt, setReceipt] = useState("");
 
   const canSubmit = useMemo(
-    () => Boolean(role && name.trim().length >= 2 && /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email) && goal.trim().length >= 8),
+    () => Boolean(
+      role &&
+      name.trim().length >= 2 &&
+      name.trim().length <= MAX_NAME_LENGTH &&
+      email.length <= MAX_EMAIL_LENGTH &&
+      /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email) &&
+      goal.trim().length >= 8 &&
+      goal.trim().length <= MAX_GOAL_LENGTH,
+    ),
     [role, name, email, goal],
   );
 
@@ -59,7 +72,7 @@ export default function JoinFlow({ initialGoal = "" }: { initialGoal?: string })
     setRole("");
     setName("");
     setEmail("");
-    setGoal(initialGoal);
+    setGoal(safeInitialGoal);
     setError("");
     setReceipt("");
     setStatus("idle");
@@ -103,15 +116,16 @@ export default function JoinFlow({ initialGoal = "" }: { initialGoal?: string })
         <p className="eyebrow">2 · WHAT SHOULD AYURE KNOW?</p>
         <label>
           Your name
-          <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" required />
+          <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" maxLength={MAX_NAME_LENGTH} required />
         </label>
         <label>
           Email
-          <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" required />
+          <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" maxLength={MAX_EMAIL_LENGTH} required />
         </label>
         <label>
           What are you trying to make happen?
-          <textarea value={goal} onChange={(event) => setGoal(event.target.value)} placeholder="Example: I own a cabin and need an operator plus a plan to improve the listing." required />
+          <textarea value={goal} onChange={(event) => setGoal(event.target.value)} maxLength={MAX_GOAL_LENGTH} placeholder="Example: I own a cabin and need an operator plus a plan to improve the listing." required />
+          <small className="subtle">{goal.length.toLocaleString()} / 2,000 characters</small>
         </label>
       </div>
 

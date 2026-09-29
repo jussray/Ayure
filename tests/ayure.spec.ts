@@ -5,6 +5,7 @@ test("AYURE intent search explains matches and proof without fake precision", as
   await expect(page.getByRole("heading", { name: /Where properties meet opportunity/i })).toBeVisible();
 
   const query = page.getByLabel("Tell AYURE what you want to make happen");
+  await expect(query).toHaveAttribute("maxlength", "500");
   await query.fill("I have $175k and want a short-term rental near Pittsburgh");
   await page.getByRole("button", { name: "Ask AYURE" }).click();
 
@@ -71,16 +72,24 @@ test("join API rejects oversized public input before touching storage", async ({
   expect(response.status()).toBe(400);
 });
 
-test("AYURE join flow preserves role state and enables a real submission only when valid", async ({ page }) => {
+test("AYURE join flow mirrors backend limits and preserves role state", async ({ page }) => {
   await page.goto("/join?goal=Connect%20me%20with%20an%20operator");
 
   const role = page.getByRole("button", { name: "Operate properties" });
   await role.click();
   await expect(role).toHaveAttribute("aria-pressed", "true");
 
-  await page.getByLabel("Your name").fill("Test Operator");
-  await page.getByLabel("Email").fill("operator@example.com");
-  await expect(page.getByLabel("What are you trying to make happen?")).toHaveValue("Connect me with an operator");
+  const name = page.getByLabel("Your name");
+  const email = page.getByLabel("Email");
+  const goal = page.getByLabel("What are you trying to make happen?");
+  await expect(name).toHaveAttribute("maxlength", "120");
+  await expect(email).toHaveAttribute("maxlength", "254");
+  await expect(goal).toHaveAttribute("maxlength", "2000");
+
+  await name.fill("Test Operator");
+  await email.fill("operator@example.com");
+  await expect(goal).toHaveValue("Connect me with an operator");
+  await expect(page.getByText(/\/ 2,000 characters/)).toBeVisible();
 
   await expect(page.getByRole("button", { name: "Join the founding network" })).toBeEnabled();
 });

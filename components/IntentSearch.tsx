@@ -26,6 +26,8 @@ const strengthLabels: Record<MatchStrength, string> = {
   possible: "Possible match",
 };
 
+const MAX_QUERY_LENGTH = 500;
+
 export default function IntentSearch() {
   const [selected, setSelected] = useState<IntentKind>("explore");
   const [query, setQuery] = useState("");
@@ -82,6 +84,7 @@ export default function IntentSearch() {
           placeholder={examples[selected]}
           autoComplete="off"
           enterKeyHint="search"
+          maxLength={MAX_QUERY_LENGTH}
         />
         <button className="gradient-button" type="submit" disabled={loading}>
           {loading ? "Finding matches…" : "Ask AYURE"}

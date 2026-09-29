@@ -47,6 +47,30 @@ test("budget parsing skips unrelated small numbers and finds the actual budget",
   expect(payload.intent.location).toBe("Pittsburgh");
 });
 
+test("match API rejects unsupported intents and oversized searches", async ({ request }) => {
+  const badIntent = await request.post("/api/match", {
+    data: { query: "find something", intent: "admin_override" },
+  });
+  expect(badIntent.status()).toBe(400);
+
+  const oversized = await request.post("/api/match", {
+    data: { query: "x".repeat(501) },
+  });
+  expect(oversized.status()).toBe(400);
+});
+
+test("join API rejects oversized public input before touching storage", async ({ request }) => {
+  const response = await request.post("/api/join", {
+    data: {
+      role: "operator",
+      name: "Test Operator",
+      email: "operator@example.com",
+      goal: "x".repeat(2001),
+    },
+  });
+  expect(response.status()).toBe(400);
+});
+
 test("AYURE join flow preserves role state and enables a real submission only when valid", async ({ page }) => {
   await page.goto("/join?goal=Connect%20me%20with%20an%20operator");
 

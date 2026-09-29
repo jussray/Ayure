@@ -14,6 +14,7 @@ export type EntityKind =
   | "business";
 
 export type ProofState = "example" | "projected" | "reported" | "verified";
+export type MatchStrength = "strong" | "good" | "possible";
 
 export interface SearchIntent {
   kind: IntentKind;
@@ -41,7 +42,7 @@ export interface CatalogEntity {
 
 export interface MatchResult {
   entity: CatalogEntity;
-  score: number;
+  strength: MatchStrength;
   reasons: string[];
 }
 

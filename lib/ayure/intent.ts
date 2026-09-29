@@ -1,5 +1,5 @@
 import { catalog } from "./fixtures";
-import type { EntityKind, IntentKind, MatchResult, SearchIntent } from "./types";
+import type { EntityKind, IntentKind, MatchResult, MatchStrength, SearchIntent } from "./types";
 
 const STOP_WORDS = new Set([
   "a",
@@ -97,6 +97,12 @@ function targetKindsFor(kind: IntentKind): EntityKind[] {
   }
 }
 
+function matchStrengthFor(score: number): MatchStrength {
+  if (score >= 80) return "strong";
+  if (score >= 50) return "good";
+  return "possible";
+}
+
 export function parseIntent(rawQuery: string, explicit?: IntentKind): SearchIntent {
   const normalized = normalize(rawQuery);
   const kind = detectIntent(normalized, explicit);
@@ -116,16 +122,16 @@ export function parseIntent(rawQuery: string, explicit?: IntentKind): SearchInte
 export function matchCatalog(intent: SearchIntent): MatchResult[] {
   return catalog
     .map((entity) => {
-      let score = 5;
+      let rankingScore = 5;
       const reasons: string[] = [];
 
       if (entity.intents.includes(intent.kind)) {
-        score += 40;
+        rankingScore += 40;
         reasons.push("Matches your goal");
       }
 
       if (intent.targetKinds.includes(entity.kind)) {
-        score += 18;
+        rankingScore += 18;
         reasons.push(`Relevant ${entity.kind}`);
       }
 
@@ -133,17 +139,17 @@ export function matchCatalog(intent: SearchIntent): MatchResult[] {
         const wanted = intent.location.toLowerCase();
         const actual = entity.location.toLowerCase();
         if (actual.includes(wanted) || wanted.includes(actual.split(",")[0])) {
-          score += 24;
+          rankingScore += 24;
           reasons.push("Location fit");
         }
       }
 
       if (intent.budgetMax && entity.kind === "property" && entity.price) {
         if (entity.price <= intent.budgetMax) {
-          score += 18;
+          rankingScore += 18;
           reasons.push("Within stated budget");
         } else {
-          score -= 25;
+          rankingScore -= 25;
         }
       }
 
@@ -152,14 +158,23 @@ export function matchCatalog(intent: SearchIntent): MatchResult[] {
         .toLowerCase();
       const overlaps = intent.terms.filter((term) => haystack.includes(term));
       if (overlaps.length) {
-        score += Math.min(overlaps.length * 6, 24);
+        rankingScore += Math.min(overlaps.length * 6, 24);
         reasons.push(`Matches: ${overlaps.slice(0, 3).join(", ")}`);
       }
 
       reasons.push(`Proof state: ${entity.proof}`);
-      return { entity, score: Math.max(0, Math.min(score, 100)), reasons };
+      const boundedScore = Math.max(0, Math.min(rankingScore, 100));
+      return {
+        rankingScore: boundedScore,
+        result: {
+          entity,
+          strength: matchStrengthFor(boundedScore),
+          reasons,
+        } satisfies MatchResult,
+      };
     })
-    .filter((result) => result.score >= 20)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
+    .filter(({ rankingScore }) => rankingScore >= 20)
+    .sort((a, b) => b.rankingScore - a.rankingScore)
+    .slice(0, 6)
+    .map(({ result }) => result);
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import type { IntentKind, MatchResponse } from "../lib/ayure/types";
+import type { IntentKind, MatchResponse, MatchStrength } from "../lib/ayure/types";
 
 const choices: Array<{ kind: IntentKind; label: string }> = [
   { kind: "buy", label: "Buy a property" },
@@ -18,6 +18,12 @@ const examples: Record<IntentKind, string> = {
   transform: "Help me transform my cabin into a better-performing stay",
   invest: "I want to invest around $200k and need options",
   offer_services: "I design short-term rentals and want property-owner clients",
+};
+
+const strengthLabels: Record<MatchStrength, string> = {
+  strong: "Strong match",
+  good: "Good match",
+  possible: "Possible match",
 };
 
 export default function IntentSearch() {
@@ -81,7 +87,7 @@ export default function IntentSearch() {
           {loading ? "Finding matches…" : "Ask AYURE"}
         </button>
       </form>
-      <p className="search-note">Searches the current AYURE example catalog. Results explain why they match and carry an explicit proof state.</p>
+      <p className="search-note">Searches the current AYURE example catalog. Match labels are qualitative routing signals, not probabilities. Every result explains why it matched and carries an explicit proof state.</p>
 
       {error ? <div className="notice error" role="alert">{error}</div> : null}
 
@@ -96,13 +102,13 @@ export default function IntentSearch() {
           </div>
 
           <div className="match-grid">
-            {response.results.map(({ entity, score, reasons }) => (
+            {response.results.map(({ entity, strength, reasons }) => (
               <article className="match-card" key={entity.id}>
                 <img src={entity.image} alt="" />
                 <div className="match-card-body">
                   <div className="card-meta">
                     <span className={`proof proof-${entity.proof}`}>{entity.proof}</span>
-                    <span>{score}% fit</span>
+                    <span>{strengthLabels[strength]}</span>
                   </div>
                   <h3>{entity.title}</h3>
                   <p>{entity.subtitle}</p>

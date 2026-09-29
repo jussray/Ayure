@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("AYURE intent search explains matches and proof", async ({ page }) => {
+test("AYURE intent search explains matches and proof without fake precision", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Where properties meet opportunity/i })).toBeVisible();
 
@@ -12,6 +12,19 @@ test("AYURE intent search explains matches and proof", async ({ page }) => {
   await expect(page.getByText(/ayure-intent-v1-/)).toBeVisible();
   await expect(page.getByText("Example").first()).toBeVisible();
   await expect(page.getByText(/Matches your goal|Relevant property/).first()).toBeVisible();
+  await expect(page.getByText(/Strong match|Good match|Possible match/).first()).toBeVisible();
+  await expect(page.getByText(/% fit/)).toHaveCount(0);
+});
+
+test("match API keeps heuristic ranking internal", async ({ request }) => {
+  const response = await request.post("/api/match", {
+    data: { query: "I want to invest in a property near Pittsburgh" },
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.results.length).toBeGreaterThan(0);
+  expect(payload.results[0]).not.toHaveProperty("score");
+  expect(["strong", "good", "possible"]).toContain(payload.results[0].strength);
 });
 
 test("natural language intent favors the user action over generic property words", async ({ request }) => {

@@ -11,7 +11,14 @@
   "observability": {
     "enabled": true
   },
-  // After `npm run cf:d1:create`, Wrangler adds the production D1 binding.
-  // The binding name must be AYURE_DB and the database name must be ayure-prod.
-  "d1_databases": []
+  // Production D1. Created 2026-10-01 (ENAM); 0001_create_ayure_leads.sql applied.
+  // The binding name must be AYURE_DB (lib/db/cloudflare-d1.ts reads env.AYURE_DB).
+  "d1_databases": [
+    {
+      "binding": "AYURE_DB",
+      "database_name": "ayure-prod",
+      "database_id": "28b66274-52e5-4d66-92e9-e8b69dde7da2",
+      "migrations_dir": "migrations"
+    }
+  ]
 }

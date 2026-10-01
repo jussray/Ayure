@@ -1,7 +1,9 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
+import { insertAyureLead, type AyureLeadRole } from "../../../lib/db/ayure-leads";
+import { isDatabaseConfigured } from "../../../lib/db/pool";
 
-const roles = new Set(["buyer", "owner", "investor", "operator", "service_provider"]);
+const roles = new Set<AyureLeadRole>(["buyer", "owner", "investor", "operator", "service_provider"]);
 const MAX_BODY_BYTES = 16_384;
 const MAX_NAME_LENGTH = 120;
 const MAX_EMAIL_LENGTH = 254;
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
   const goal = payload.goal?.trim() ?? "";
 
   const invalidFields =
-    !roles.has(role) ||
+    !roles.has(role as AyureLeadRole) ||
     name.length < 2 ||
     name.length > MAX_NAME_LENGTH ||
     !validEmail(email) ||
@@ -48,9 +50,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const supabaseUrl = process.env.AYURE_SUPABASE_URL;
-  const serviceRoleKey = process.env.AYURE_SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!isDatabaseConfigured()) {
     return NextResponse.json(
       { error: "AYURE applications are not connected to storage yet.", code: "backend_not_configured" },
       { status: 503 },
@@ -58,24 +58,21 @@ export async function POST(request: Request) {
   }
 
   const receipt = `ayure-join-${randomUUID()}`;
-  const upstream = await fetch(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/ayure_leads`, {
-    method: "POST",
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    },
-    body: JSON.stringify({ role, name, email, goal, receipt, status: "new" }),
-    cache: "no-store",
-  });
 
-  if (!upstream.ok) {
+  try {
+    const persisted = await insertAyureLead({
+      role: role as AyureLeadRole,
+      name,
+      email,
+      goal,
+      receipt,
+    });
+
+    return NextResponse.json({ ok: true, receipt: persisted.receipt });
+  } catch {
     return NextResponse.json(
       { error: "We could not save your application. Please try again.", code: "storage_error" },
       { status: 502 },
     );
   }
-
-  return NextResponse.json({ ok: true, receipt });
 }

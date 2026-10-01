@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { insertAyureLead, type AyureLeadRole } from "../../../lib/db/ayure-leads";
-import { isDatabaseConfigured } from "../../../lib/db/pool";
+import { isDatabaseConfigured } from "../../../lib/db/cloudflare-d1";
 
 const roles = new Set<AyureLeadRole>(["buyer", "owner", "investor", "operator", "service_provider"]);
 const MAX_BODY_BYTES = 16_384;

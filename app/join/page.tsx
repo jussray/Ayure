@@ -11,7 +11,7 @@ export default async function JoinPage({ searchParams }: { searchParams?: JoinSe
     <main className="join-page">
       <header className="join-header">
         <a className="wordmark" href="/">AYURE</a>
-        <a href="/">← Back to explore</a>
+        <a href="/">← Back to AYURE</a>
       </header>
       <section className="join-wrap">
         <p className="eyebrow">FOUNDING NETWORK</p>

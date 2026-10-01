@@ -7,7 +7,7 @@ test("AYURE intent search explains matches and proof without fake precision", as
   const query = page.getByLabel("Tell AYURE what you want to make happen");
   await expect(query).toHaveAttribute("maxlength", "500");
   await query.fill("I have $175k and want a short-term rental near Pittsburgh");
-  await page.getByRole("button", { name: "Ask AYURE" }).click();
+  await page.getByRole("button", { name: "Search" }).click();
 
   await expect(page.getByText("AYURE understood")).toBeVisible();
   await expect(page.getByText(/ayure-intent-v1-/)).toBeVisible();
@@ -99,4 +99,36 @@ test("mobile layout has no horizontal overflow", async ({ page }, testInfo) => {
   await page.goto("/");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test("reference search surface: chips, structured fields and a bare place name all drive real matches", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Sign In" })).toBeVisible();
+  await expect(page.locator(".hero-photo img")).toBeVisible();
+
+  const buy = page.getByRole("button", { name: "Buy a property" });
+  await buy.click();
+  await expect(buy).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByLabel("Tell AYURE what you want to make happen").fill("Pittsburgh");
+  await page.getByLabel("Budget").selectOption("250000");
+  await page.getByLabel("Timeframe").selectOption("3m");
+  await page.getByRole("button", { name: "Search" }).click();
+
+  await expect(page.getByText("AYURE understood")).toBeVisible();
+  await expect(page.getByText(/buy a property · Pittsburgh/)).toBeVisible();
+  await expect(page.getByText("Location fit").first()).toBeVisible();
+  await expect(page.locator(".match-card img").first()).toHaveAttribute("src", /^\/images\//);
+  await expect(page.getByText(/% fit/)).toHaveCount(0);
+});
+
+test("homepage shows no invented scale, platform endorsement or unlabeled figures", async ({ page }) => {
+  await page.goto("/");
+  const body = await page.locator("main").innerText();
+  expect(body).not.toMatch(/1,200\+|350\+|€280M|4\.8\/5|Trusted by experts/i);
+  expect(body).toMatch(/Founding collection/);
+  expect(body).toMatch(/EXAMPLE/);
+  for (const img of await page.locator("main img").all()) {
+    expect(await img.getAttribute("src")).toMatch(/^\/images\//);
+  }
 });

@@ -1,6 +1,6 @@
 {
   "name": "ayure-web",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "engines": {
     "node": ">=22 <23"
@@ -11,11 +11,15 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "verify:db": "node scripts/verify-db.mjs"
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "cf:d1:create": "wrangler d1 create ayure-prod --location enam",
+    "cf:d1:migrate": "wrangler d1 migrations apply ayure-prod --remote"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "1.20.6",
     "next": "15.5.26",
-    "pg": "8.23.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "server-only": "0.0.1"
@@ -23,9 +27,9 @@
   "devDependencies": {
     "@playwright/test": "^1.47.2",
     "@types/node": "^22.0.0",
-    "@types/pg": "8.23.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "wrangler": "4.131.1"
   }
 }

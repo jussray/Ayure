@@ -117,7 +117,7 @@ test("reference search surface: chips, structured fields and a bare place name a
 
   await expect(page.getByText("AYURE understood")).toBeVisible();
   await expect(page.getByText(/buy a property · Pittsburgh/)).toBeVisible();
-  await expect(page.getByText("Within stated budget").first()).toBeVisible();
+  await expect(page.getByText("Location fit").first()).toBeVisible();
   await expect(page.locator(".match-card img").first()).toHaveAttribute("src", /^\/images\//);
   await expect(page.getByText(/% fit/)).toHaveCount(0);
 });

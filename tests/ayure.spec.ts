@@ -103,7 +103,7 @@ test("mobile layout has no horizontal overflow", async ({ page }, testInfo) => {
 
 test("reference search surface: chips, structured fields and a bare place name all drive real matches", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Sign In" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign In" })).toBeVisible();
   await expect(page.locator(".hero-photo img")).toBeVisible();
 
   const buy = page.getByRole("button", { name: "Buy a property" });

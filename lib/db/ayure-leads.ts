@@ -1,5 +1,5 @@
 import "server-only";
-import { getDb } from "./pool";
+import { requireAyureDb } from "./cloudflare-d1";
 
 export type AyureLeadRole = "buyer" | "owner" | "investor" | "operator" | "service_provider";
 
@@ -14,7 +14,7 @@ export type NewAyureLead = {
 type InsertedLeadRow = {
   receipt: string;
   status: "received";
-  created_at: Date;
+  created_at: string;
 };
 
 export type InsertedAyureLead = {
@@ -24,34 +24,53 @@ export type InsertedAyureLead = {
 };
 
 export async function insertAyureLead(input: NewAyureLead): Promise<InsertedAyureLead> {
-  const result = await getDb().query<InsertedLeadRow>(
-    `
-      INSERT INTO public.ayure_leads (
-        role,
-        name,
-        email,
-        goal,
-        receipt,
-        status
-      )
-      VALUES ($1, $2, $3, $4, $5, 'received')
-      RETURNING receipt, status, created_at
-    `,
-    [input.role, input.name, input.email, input.goal, input.receipt],
-  );
+  const session = requireAyureDb().withSession("first-primary");
 
-  if (result.rowCount !== 1 || !result.rows[0]) {
-    throw new Error("AYURE lead persistence returned no row");
+  const insert = await session
+    .prepare(
+      `
+        INSERT INTO ayure_leads (
+          role,
+          name,
+          email,
+          goal,
+          receipt,
+          status
+        )
+        VALUES (?, ?, ?, ?, ?, 'received')
+      `,
+    )
+    .bind(input.role, input.name, input.email, input.goal, input.receipt)
+    .run();
+
+  if (!insert.success) {
+    throw new Error("AYURE lead persistence failed");
   }
 
-  const row = result.rows[0];
-  if (row.status !== "received" || row.receipt !== input.receipt) {
+  const row = await session
+    .prepare(
+      `
+        SELECT receipt, status, created_at
+        FROM ayure_leads
+        WHERE receipt = ?
+        LIMIT 1
+      `,
+    )
+    .bind(input.receipt)
+    .first<InsertedLeadRow>();
+
+  if (!row || row.status !== "received" || row.receipt !== input.receipt) {
     throw new Error("AYURE lead persistence returned an unexpected receipt or status");
+  }
+
+  const createdAt = new Date(row.created_at);
+  if (Number.isNaN(createdAt.getTime())) {
+    throw new Error("AYURE lead persistence returned an invalid created_at value");
   }
 
   return {
     receipt: row.receipt,
     status: row.status,
-    createdAt: row.created_at,
+    createdAt,
   };
 }

@@ -16,7 +16,9 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
+      # `npm run build` is the OpenNext Worker build (same command Workers Builds runs).
       - run: npm run build
-      - run: npm run cf:build
+      - name: Worker bundle exists (what `wrangler deploy` needs)
+        run: test -f .open-next/worker.js && test -d .open-next/assets && ls -la .open-next/worker.js
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

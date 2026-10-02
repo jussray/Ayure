@@ -45,6 +45,8 @@ npm run cf:preview
 npm run cf:deploy
 ```
 
+`npm run build` is the OpenNext Worker build (it runs `next build` through `build:next`, set as `buildCommand` in `open-next.config.ts`). Cloudflare Workers Builds can therefore use build command `npm run build` and deploy command `npx wrangler deploy` unchanged. `.node-version` pins Node 22 for Workers Builds.
+
 The Worker configuration is `wrangler.jsonc`. Production persistence uses a D1 database named `ayure-prod` with binding name `AYURE_DB`.
 
 Create the D1 database once from an authenticated Cloudflare environment:

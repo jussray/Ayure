@@ -20,5 +20,19 @@ jobs:
       - run: npm run build
       - name: Worker bundle exists (what `wrangler deploy` needs)
         run: test -f .open-next/worker.js && test -d .open-next/assets && ls -la .open-next/worker.js
+      - name: Verify RFC 9116 disclosure is inside the real OpenNext Worker asset bundle
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const content = readFileSync('.open-next/assets/.well-known/security.txt', 'utf8');
+          if (!/^Contact: mailto:founder@jussco\.company$/m.test(content)) throw new Error('disclosure contact invalid');
+          const expires = content.match(/^Expires: ([^\r\n]+)$/m);
+          if (!expires || !Number.isFinite(Date.parse(expires[1])) || Date.parse(expires[1]) <= Date.now()) {
+            throw new Error('disclosure expiry is absent or invalid');
+          }
+          if (!content.includes('Canonical: https://ayure.us/.well-known/security.txt')) {
+            throw new Error('disclosure canonical is not the approved site');
+          }
+          NODE
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

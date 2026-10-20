@@ -13,7 +13,9 @@
     { "pattern": "ayure.us", "custom_domain": true },
     { "pattern": "www.app.ayure.us", "custom_domain": true },
     { "pattern": "www.api.ayure.us", "custom_domain": true },
-    { "pattern": "www.signup.ayure.us", "custom_domain": true }
+    { "pattern": "www.signup.ayure.us", "custom_domain": true },
+    { "pattern": "app.ayure.us/*", "zone_name": "ayure.us" },
+    { "pattern": "api.ayure.us/*", "zone_name": "ayure.us" }
   ],
   "observability": {
     "enabled": true

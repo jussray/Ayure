@@ -377,3 +377,54 @@ footer nav { display: flex; gap: 26px; font-weight: 600; color: var(--forest); }
   .form-actions { flex-direction: column-reverse; align-items: stretch; }
   .form-actions .gradient-button { width: 100%; }
 }
+
+/* AYURE editorial motion: Juss & Co's depth and rhythm, in AYURE colors. */
+/* Default visibility is intentional: no-JS or older browsers never lose content. */
+@media (prefers-reduced-motion: no-preference) {
+  html.ayure-motion-ready .ayure-reveal {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+    transition: opacity 750ms cubic-bezier(.2, .7, .2, 1),
+                transform 750ms cubic-bezier(.2, .7, .2, 1);
+  }
+  html.ayure-motion-ready .ayure-reveal.ayure-in-view {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  .hero-copy h1 { transition-delay: 90ms !important; }
+  .hero-lede { transition-delay: 170ms !important; }
+  .search-surface { transition-delay: 150ms !important; }
+  .hero-photo img { will-change: transform; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .cards > .card,
+  .pros-features .feature,
+  .steps li,
+  .gradient-button,
+  .outline-button,
+  .ghost-button {
+    transition: transform 340ms cubic-bezier(.2, .7, .2, 1),
+                box-shadow 340ms cubic-bezier(.2, .7, .2, 1);
+  }
+  .cards > .card:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 28px 65px -30px rgba(28, 58, 44, .35);
+  }
+  .cards > .card .card-media img { transition: transform 650ms cubic-bezier(.2, .7, .2, 1); }
+  .cards > .card:hover .card-media img { transform: scale(1.045); }
+  .pros-features .feature:hover,
+  .steps li:hover { transform: translateY(-3px); }
+  .gradient-button:not(:disabled):hover,
+  .outline-button:hover,
+  .ghost-button:hover { transform: translateY(-2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  html.ayure-motion-ready .ayure-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .hero-photo img,
+  .card-media img { transform: none !important; transition: none !important; }
+}

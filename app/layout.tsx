@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AyureMotion from "../components/AyureMotion";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.ayure.us"),
+  alternates: { canonical: "/" },
   title: "AYURE | Where properties meet opportunity",
   description:
     "Discover properties, trusted professionals, and short-term rental opportunities in one destination.",
@@ -18,7 +21,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           rel="stylesheet"
         />
       </head>
-      <body data-ayure-build="v0.2-reference-2026-10-01">{children}</body>
+      <body data-ayure-build="v0.2-reference-2026-10-01">{children}<AyureMotion /></body>
     </html>
   );
 }

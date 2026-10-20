@@ -10,7 +10,10 @@
   },
   "routes": [
     { "pattern": "www.ayure.us", "custom_domain": true },
-    { "pattern": "ayure.us", "custom_domain": true }
+    { "pattern": "ayure.us", "custom_domain": true },
+    { "pattern": "www.app.ayure.us", "custom_domain": true },
+    { "pattern": "www.api.ayure.us", "custom_domain": true },
+    { "pattern": "www.signup.ayure.us", "custom_domain": true }
   ],
   "observability": {
     "enabled": true

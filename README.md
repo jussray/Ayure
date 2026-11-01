@@ -17,15 +17,15 @@ Current source implements:
 - visible match reasons instead of a mystery score
 - privacy-safe intent fingerprints and a bounded continuity cookie
 - proof states: `example`, `projected`, `reported`, `verified`
-- Cloudflare D1 persistence for founding-network Join submissions through the `AYURE_DB` Worker binding
-- prepared D1 statements and bounded server-side validation
+- production Cloudflare D1 Join storage via `AYURE_DB`; staged PostgreSQL migration code on its own branch (NOT deployed)
+- production D1 prepared statements; staged PostgreSQL parameterized writes and bounded validation
 - a credential-free application database boundary: no database password or URL ships with AYURE
 - responsive desktop/mobile UI
 - Playwright verification for search, join state, and mobile overflow
 
 The checked-in catalog is **example data only**. It is deliberately labeled Example in the interface and must not be presented as real marketplace inventory, customers, ratings, revenue, or partnerships.
 
-The historical Supabase migration under `supabase/migrations/` is retained as schema history only. AYURE's active Join runtime does not depend on Supabase.
+The historical Supabase migration under `supabase/migrations/` is retained as schema history only. AYURE's active Join runtime does not depend on Supabase. For the proposed PostgreSQL cutover, see `db/postgres/README.md`: production is NOT yet migrated.
 
 ## Local setup
 
@@ -104,7 +104,7 @@ GitHub Actions runs typecheck, the production Next.js build, and Playwright on `
 7. Persistence is an AYURE contract; Cloudflare D1 is the current storage adapter, not the product identity.
 8. D1 does not provide PostgreSQL RLS semantics; authorization stays in AYURE's application/query boundary.
 
-## Current fingerprint
+## Staged PostgreSQL migration\n\nThis branch replaces the Join route's D1 adapter in source, but is **not production-ready**. It must not be merged or deployed until the source D1 inventory/backfill, managed PostgreSQL provisioning, strict TLS and privilege tests, Worker compatibility, edge rate limit, alerts, and canary pass. Do not run old D1 instructions as proof of PG readiness. Runtime `DATABASE_URL` is a Cloudflare secret, not a checked-in value. See `db/postgres/README.md`.\n\n## Current fingerprint
 
 - authoritative repo: `jussray/Ayure-`
 - branch: `main`

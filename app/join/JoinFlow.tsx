@@ -25,6 +25,7 @@ export default function JoinFlow({ initialGoal = "" }: { initialGoal?: string })
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const [error, setError] = useState("");
   const [receipt, setReceipt] = useState("");
+  const [website, setWebsite] = useState("");
 
   const canSubmit = useMemo(
     () => Boolean(
@@ -51,7 +52,7 @@ export default function JoinFlow({ initialGoal = "" }: { initialGoal?: string })
       const response = await fetch("/api/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, name, email, goal }),
+        body: JSON.stringify({ role, name, email, goal, website }),
       });
       const payload = (await response.json()) as { ok?: boolean; receipt?: string; error?: string; code?: string };
       if (!response.ok) {
@@ -75,6 +76,7 @@ export default function JoinFlow({ initialGoal = "" }: { initialGoal?: string })
     setGoal(safeInitialGoal);
     setError("");
     setReceipt("");
+    setWebsite("");
     setStatus("idle");
   }
 
@@ -112,6 +114,10 @@ export default function JoinFlow({ initialGoal = "" }: { initialGoal?: string })
         ))}
       </div>
 
+      <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}>
+        <label htmlFor="ayure-website">Leave this field blank</label>
+        <input id="ayure-website" type="text" name="website" value={website} onChange={(event) => setWebsite(event.target.value)} autoComplete="off" tabIndex={-1} />
+      </div>
       <div className="form-grid">
         <p className="eyebrow">2 · WHAT SHOULD AYURE KNOW?</p>
         <label>

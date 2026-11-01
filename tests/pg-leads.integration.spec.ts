@@ -24,12 +24,12 @@ test("node-postgres TLS proof and runtime least privilege", async () => {
     const granted = await client.query("SELECT receipt,status,created_at FROM public.ayure_leads WHERE receipt=$1", [receipt]);
     expect(granted.rows).toHaveLength(1);
     for (const restricted of [
-      "SELECT name,email,goal,id FROM public.ayure_leads",
+      "SELECT name,email,goal,id FROM public.ayure_leads WHERE receipt=$1",
       "UPDATE public.ayure_leads SET status='reviewed' WHERE receipt=$1",
       "DELETE FROM public.ayure_leads WHERE receipt=$1",
     ]) {
       await client.query("SAVEPOINT privilege_probe");
-      await expect(client.query(restricted, [receipt])).rejects.toThrow();
+      await expect(client.query(restricted, [receipt])).rejects.toMatchObject({ code: "42501" });
       await client.query("ROLLBACK TO SAVEPOINT privilege_probe");
       await client.query("RELEASE SAVEPOINT privilege_probe");
     }

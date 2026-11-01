@@ -12,10 +12,10 @@ export function sanitizeDatabaseUrl(raw: string): string {
     throw new Error("DATABASE_URL must be a PostgreSQL URL with a hostname");
   }
   // A query-string host could redirect the socket while TLS checks the URL host.
-  if ([...parsed.searchParams.keys()].some((key) => key.toLowerCase() === "host")) {
+  if (Array.from(parsed.searchParams.keys()).some((key) => key.toLowerCase() === "host")) {
     throw new Error("DATABASE_URL must not override the host in query parameters");
   }
-  for (const key of [...parsed.searchParams.keys()]) {
+  for (const key of Array.from(parsed.searchParams.keys())) {
     if (prohibitedQueryKeys.has(key.toLowerCase())) parsed.searchParams.delete(key);
   }
   parsed.hash = "";

@@ -20,7 +20,7 @@
     "cf:d1:migrate": "wrangler d1 migrations apply ayure-prod --remote"
   },
   "dependencies": {
-    "@opennextjs/cloudflare": "1.20.6",
+    "@opennextjs/cloudflare": "1.20.15",
     "next": "15.5.26",
     "react": "18.3.1",
     "react-dom": "18.3.1",

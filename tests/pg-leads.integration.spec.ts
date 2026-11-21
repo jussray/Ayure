@@ -27,7 +27,10 @@ test("node-postgres TLS proof and runtime least privilege", async () => {
     const granted = await client.query("SELECT receipt,status,created_at FROM public.ayure_leads WHERE receipt=$1", [receipt]);
     expect(granted.rows).toHaveLength(1);
     for (const restricted of [
-      "SELECT name,email,goal,id FROM public.ayure_leads WHERE receipt=$1",
+      "SELECT name FROM public.ayure_leads WHERE receipt=$1",
+      "SELECT email FROM public.ayure_leads WHERE receipt=$1",
+      "SELECT goal FROM public.ayure_leads WHERE receipt=$1",
+      "SELECT id FROM public.ayure_leads WHERE receipt=$1",
       "UPDATE public.ayure_leads SET status='reviewed' WHERE receipt=$1",
       "DELETE FROM public.ayure_leads WHERE receipt=$1",
     ]) {

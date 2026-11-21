@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Apply Ayure migrations only to the dedicated non-production preview D1.
+  "d1_databases": [
+    {
+      "binding": "AYURE_PREVIEW_DB",
+      "database_name": "ayure-preview",
+      "database_id": "25b48f0c-9704-43eb-b33c-90f83e6b3a58",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

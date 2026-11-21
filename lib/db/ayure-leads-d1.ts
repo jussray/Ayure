@@ -2,6 +2,12 @@ import "server-only";
 import type { NewAyureLead, InsertedAyureLead } from "./ayure-leads";
 import { requireAyureDb } from "./cloudflare-d1";
 
+type InsertedLeadRow = {
+  receipt: string;
+  status: "received";
+  created_at: string;
+};
+
 export async function insertAyureLeadD1(input: NewAyureLead): Promise<InsertedAyureLead> {
   const session = requireAyureDb().withSession("first-primary");
 

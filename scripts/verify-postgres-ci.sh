@@ -23,7 +23,7 @@ docker run --rm --name "$name" -d \
   -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key >/dev/null
 ready=0
 for _ in {1..40}; do
-  if docker exec "$name" pg_isready -U postgres -d ayure_ci >/dev/null 2>&1; then
+  if docker exec "$name" psql -X -tA -U postgres -d ayure_ci -c "SELECT 1" >/dev/null 2>&1; then
     ready=1
     break
   fi

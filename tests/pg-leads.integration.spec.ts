@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { setDefaultResultOrder } from "node:dns";
 import { spawnSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
 import { Pool } from "pg";
@@ -6,13 +7,15 @@ import { sanitizeDatabaseUrl } from "../lib/db/postgres-config";
 
 // Set ONLY for an isolated, freshly migrated disposable PostgreSQL test DB.
 const url = process.env.AYURE_PG_TEST_DATABASE_URL;
-test.skip(!url, "Needs a fresh migrated PostgreSQL test database (not production)");
 test("node-postgres TLS proof and runtime least privilege", async () => {
+  test.skip(!url, "Needs a freshly migrated isolated PostgreSQL test database (not production)");
   const pool = new Pool({ connectionString: sanitizeDatabaseUrl(url!), ssl: {}, max: 1 });
   const client = await pool.connect();
   try {
     const proof = await client.query<{ ssl: boolean }>("SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()");
     expect(proof.rows[0]?.ssl).toBe(true);
+    const identity = await client.query<{ role: string }>("SELECT current_user AS role");
+    expect(identity.rows[0]?.role).toBe("ayure_app");
     const receipt = `ayure-join-${randomUUID()}`;
     await client.query("BEGIN");
     const result = await client.query(
@@ -36,6 +39,17 @@ test("node-postgres TLS proof and runtime least privilege", async () => {
     await client.query("ROLLBACK");
   } finally {
     client.release();
+    await pool.end();
+  }
+});
+test("TLS hostname mismatch fails closed", async () => {
+  const mismatch = process.env.AYURE_PG_CI_HOSTNAME_MISMATCH_URL;
+  test.skip(!mismatch, "Needs the short-lived CI certificate with IP-only subjectAltName");
+  setDefaultResultOrder("ipv4first");
+  const pool = new Pool({ connectionString: sanitizeDatabaseUrl(mismatch!), ssl: {}, connectionTimeoutMillis: 5_000 });
+  try {
+    await expect(pool.query("SELECT 1")).rejects.toMatchObject({ code: "ERR_TLS_CERT_ALTNAME_INVALID" });
+  } finally {
     await pool.end();
   }
 });

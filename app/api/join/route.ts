@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
-import { insertAyureLead, type AyureLeadRole } from "../../../lib/db/ayure-leads";
-import { isDatabaseConfigured } from "../../../lib/db/postgres";
+import { insertAyureLead, isLeadDatabaseConfigured, type AyureLeadRole } from "../../../lib/db/ayure-leads";
 
 export const runtime = "nodejs";
 
@@ -82,7 +81,7 @@ export async function POST(request: Request) {
   if (invalid) {
     return reply({ error: "Choose a role and provide a valid name, email, and concise description of what you want to make happen." }, 400);
   }
-  if (!isDatabaseConfigured()) {
+  if (!isLeadDatabaseConfigured()) {
     return reply({ error: "AYURE storage is temporarily unavailable.", code: "backend_not_configured" }, 503);
   }
   const receipt = `ayure-join-${randomUUID()}`;

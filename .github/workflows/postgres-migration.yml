@@ -1,0 +1,22 @@
+name: postgres-migration
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies without bypassing peer requirements
+        run: npm install --no-audit --no-fund
+      - name: Verify fresh migration + column privileges + node-postgres TLS
+        run: bash scripts/verify-postgres-ci.sh

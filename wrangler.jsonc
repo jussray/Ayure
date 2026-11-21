@@ -20,8 +20,7 @@
       "database_id": "28b66274-52e5-4d66-92e9-e8b69dde7da2",
       "migrations_dir": "migrations"
     }
-  ]
-  ,
+  ],
   // Worker Previews must never bind the production AYURE_DB.
   "previews": {
     "d1_databases": [

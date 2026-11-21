@@ -2,6 +2,12 @@ import "server-only";
 import type { NewAyureLead, InsertedAyureLead } from "./ayure-leads";
 import { requireAyurePool } from "./postgres";
 
+type InsertedLeadRow = {
+  receipt: string;
+  status: "received";
+  created_at: Date;
+};
+
 export async function insertAyureLeadPostgres(input: NewAyureLead): Promise<InsertedAyureLead> {
   const result = await requireAyurePool().query<InsertedLeadRow>(
     `INSERT INTO public.ayure_leads (role, name, email, goal, receipt)

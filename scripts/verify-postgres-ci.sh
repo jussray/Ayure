@@ -47,5 +47,8 @@ docker exec "$name" psql -X -v ON_ERROR_STOP=1 -U ayure_migrator -d ayure_ci \
 docker exec -i "$name" psql -X -v ON_ERROR_STOP=1 -U ayure_migrator -d ayure_ci < db/postgres/0001_create_ayure_leads.sql
 export NODE_EXTRA_CA_CERTS="$tmp/server.crt"
 export AYURE_PG_TEST_DATABASE_URL="postgresql://ayure_app:ayure-local-ci-app-only@127.0.0.1:5432/ayure_ci?sslmode=disable"
-export AYURE_PG_CI_HOSTNAME_MISMATCH_URL="postgresql://ayure_app:ayure-local-ci-app-only@localhost:5432/ayure_ci?sslmode=disable"
+# DNS resolves to the same DB socket, but the server certificate intentionally omits this hostname.
+# This exercises PG's normal host-derived TLS identity verification without overriding ssl.servername.
+printf '127.0.0.1 ayure-ci-mismatch.invalid\\n' | sudo tee -a /etc/hosts >/dev/null
+export AYURE_PG_CI_HOSTNAME_MISMATCH_URL="postgresql://ayure_app:ayure-local-ci-app-only@ayure-ci-mismatch.invalid:5432/ayure_ci?sslmode=disable"
 npx playwright test tests/pg-leads.integration.spec.ts --project=desktop-chromium

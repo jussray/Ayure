@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { setDefaultResultOrder } from "node:dns";
 import { spawnSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
 import { Pool } from "pg";
@@ -48,10 +47,9 @@ test("node-postgres TLS proof and runtime least privilege", async () => {
 test("TLS hostname mismatch fails closed", async () => {
   const mismatch = process.env.AYURE_PG_CI_HOSTNAME_MISMATCH_URL;
   test.skip(!mismatch, "Needs the short-lived CI certificate and trusted test CA");
-  setDefaultResultOrder("ipv4first");
   const pool = new Pool({
     connectionString: sanitizeDatabaseUrl(mismatch!),
-    ssl: { servername: "unauthorized-hostname.ayure.invalid" },
+    ssl: {}, // Same certificate verification settings as the application.
     connectionTimeoutMillis: 5_000,
   });
   try {

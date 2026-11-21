@@ -44,9 +44,13 @@ test("node-postgres TLS proof and runtime least privilege", async () => {
 });
 test("TLS hostname mismatch fails closed", async () => {
   const mismatch = process.env.AYURE_PG_CI_HOSTNAME_MISMATCH_URL;
-  test.skip(!mismatch, "Needs the short-lived CI certificate with IP-only subjectAltName");
+  test.skip(!mismatch, "Needs the short-lived CI certificate and trusted test CA");
   setDefaultResultOrder("ipv4first");
-  const pool = new Pool({ connectionString: sanitizeDatabaseUrl(mismatch!), ssl: {}, connectionTimeoutMillis: 5_000 });
+  const pool = new Pool({
+    connectionString: sanitizeDatabaseUrl(mismatch!),
+    ssl: { servername: "unauthorized-hostname.ayure.invalid" },
+    connectionTimeoutMillis: 5_000,
+  });
   try {
     await expect(pool.query("SELECT 1")).rejects.toMatchObject({ code: "ERR_TLS_CERT_ALTNAME_INVALID" });
   } finally {

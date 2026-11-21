@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { sanitizeDatabaseUrl, PG_POOL_MAX_PER_ISOLATE } from "../lib/db/postgres-config";
+import { resolveLeadBackend } from "../lib/db/storage-mode";
+
+test("D1 remains the default until explicit PostgreSQL cutover", () => {
+  expect(resolveLeadBackend(undefined)).toBe("d1");
+  expect(resolveLeadBackend("d1")).toBe("d1");
+  expect(resolveLeadBackend("postgres")).toBe("postgres");
+  expect(() => resolveLeadBackend("auto")).toThrow();
+});
 
 test("postgres URL removes ALL driver-dependent TLS overrides", () => {
   const url = sanitizeDatabaseUrl("postgresql://ayure_app:secret@db.example.org:5432/ayure?sslmode=disable&sslcert=x&sslkey=y&sslrootcert=z&ssl=true&uselibpqcompat=1&application_name=ayure");

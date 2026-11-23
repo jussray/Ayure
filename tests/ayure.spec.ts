@@ -164,3 +164,25 @@ test("homepage and join canonical URLs use the www hostname", async ({ page }) =
   await page.goto("/join");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://www.ayure.us/join");
 });
+
+
+test("revealed homepage content remains visible when printed", async ({ page }) => {
+  await page.goto("/");
+  const card = page.locator(".cards > .card").first();
+  await card.scrollIntoViewIfNeeded();
+  await expect(card).toHaveClass(/ayure-in-view/);
+  await page.emulateMedia({ media: "print" });
+  await expect(card).toBeVisible();
+  await expect(card).toHaveCSS("opacity", "1");
+  await expect(card).toHaveCSS("transform", "none");
+});
+
+test("hover depth remains active after cards are revealed", async ({ page }) => {
+  await page.goto("/");
+  const card = page.locator(".cards > .card").first();
+  await card.scrollIntoViewIfNeeded();
+  await expect(card).toHaveClass(/ayure-in-view/);
+  await card.hover();
+  await expect.poll(() => card.evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m42)).toBe(-7);
+  await expect.poll(() => page.locator(".hero-photo").evaluate((element) => getComputedStyle(element, "::before").zIndex)).toBe("1");
+});

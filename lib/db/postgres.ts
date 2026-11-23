@@ -1,33 +1,41 @@
 import "server-only";
-import { Pool } from "pg";
-import { PG_POOL_MAX_PER_ISOLATE, sanitizeDatabaseUrl } from "./postgres-config";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { Client } from "pg";
+import { getAyureHyperdriveConnectionString } from "./postgres-config";
 
-// One pool per warm server/Worker isolate. This is NOT a deployment-wide limit.
-declare global {
-  var __ayurePostgresPool: Pool | undefined;
-  var __ayurePostgresPoolUrl: string | undefined;
+function requireAyureHyperdriveConnectionString(): string {
+  const { env } = getCloudflareContext();
+  return getAyureHyperdriveConnectionString(env);
 }
 
 export function isDatabaseConfigured(): boolean {
-  return Boolean(process.env.DATABASE_URL?.trim());
+  try {
+    requireAyureHyperdriveConnectionString();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-export function requireAyurePool(): Pool {
-  if (!isDatabaseConfigured()) throw new Error("DATABASE_URL is not configured");
-  const connectionString = sanitizeDatabaseUrl(process.env.DATABASE_URL!);
-  if (globalThis.__ayurePostgresPool && globalThis.__ayurePostgresPoolUrl !== connectionString) {
-    throw new Error("DATABASE_URL changed within an active PostgreSQL pool");
+/**
+ * OpenNext exposes the Worker binding through getCloudflareContext().
+ * Hyperdrive owns the shared upstream pool, so create and close one pg Client
+ * per request instead of caching a process-global Pool in a Worker isolate.
+ */
+export async function withAyurePostgresClient<T>(
+  operation: (client: Client) => Promise<T>,
+): Promise<T> {
+  const client = new Client({
+    connectionString: requireAyureHyperdriveConnectionString(),
+    application_name: "ayure-worker",
+    connectionTimeoutMillis: 5_000,
+  });
+
+  try {
+    await client.connect();
+    return await operation(client);
+  } finally {
+    // Also attempt cleanup after a failed connect; do not mask the original error.
+    await client.end().catch(() => undefined);
   }
-  if (!globalThis.__ayurePostgresPool) {
-    globalThis.__ayurePostgresPool = new Pool({
-      connectionString,
-      ssl: {}, // Node trust store + hostname verification. NEVER rejectUnauthorized:false.
-      max: PG_POOL_MAX_PER_ISOLATE,
-      connectionTimeoutMillis: 5_000,
-      idleTimeoutMillis: 30_000,
-      allowExitOnIdle: true,
-    });
-    globalThis.__ayurePostgresPoolUrl = connectionString;
-  }
-  return globalThis.__ayurePostgresPool;
 }

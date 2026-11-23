@@ -18,6 +18,7 @@
       "binding": "AYURE_DB",
       "database_name": "ayure-prod",
       "database_id": "28b66274-52e5-4d66-92e9-e8b69dde7da2",
+      "preview_database_id": "25b48f0c-9704-43eb-b33c-90f83e6b3a58",
       "migrations_dir": "migrations"
     }
   ]

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { sanitizeDatabaseUrl, PG_POOL_MAX_PER_ISOLATE } from "../lib/db/postgres-config";
+import { getAyureHyperdriveConnectionString, sanitizeDatabaseUrl } from "../lib/db/postgres-config";
 import { resolveLeadBackend } from "../lib/db/storage-mode";
 
 test("D1 remains the default until explicit PostgreSQL cutover", () => {
@@ -9,16 +9,25 @@ test("D1 remains the default until explicit PostgreSQL cutover", () => {
   expect(() => resolveLeadBackend("auto")).toThrow();
 });
 
-test("postgres URL removes ALL driver-dependent TLS overrides", () => {
+test("Worker runtime requires a valid AYURE_HYPERDRIVE binding", () => {
+  expect(() => getAyureHyperdriveConnectionString({})).toThrow(/binding is unavailable/);
+  expect(() => getAyureHyperdriveConnectionString({
+    AYURE_HYPERDRIVE: { connectionString: "https://not-postgres.example" },
+  })).toThrow(/invalid PostgreSQL connection string/);
+  expect(getAyureHyperdriveConnectionString({
+    AYURE_HYPERDRIVE: { connectionString: "postgresql://hyperdrive.internal/ayure" },
+  })).toBe("postgresql://hyperdrive.internal/ayure");
+});
+
+test("direct node-postgres CI URLs remove driver-dependent TLS overrides", () => {
   const url = sanitizeDatabaseUrl("postgresql://ayure_app:secret@db.example.org:5432/ayure?sslmode=disable&sslcert=x&sslkey=y&sslrootcert=z&ssl=true&uselibpqcompat=1&application_name=ayure");
   const params = new URL(url).searchParams;
   for (const key of ["sslmode", "sslcert", "sslkey", "sslrootcert", "ssl", "uselibpqcompat"]) {
     expect(params.has(key)).toBe(false);
   }
   expect(params.get("application_name")).toBe("ayure");
-  expect(PG_POOL_MAX_PER_ISOLATE).toBe(2);
 });
-test("postgres URL rejects wrong schemes and host overrides", () => {
+test("direct node-postgres CI URLs reject wrong schemes and host overrides", () => {
   expect(() => sanitizeDatabaseUrl("http://db.example.org/ayure")).toThrow();
   expect(() => sanitizeDatabaseUrl("postgresql://db.example.org/ayure?host=attacker.example.org")).toThrow();
   expect(() => sanitizeDatabaseUrl("")).toThrow();

@@ -113,3 +113,39 @@ GitHub Actions runs typecheck, the production Next.js build, and Playwright on `
 - runtime target: Cloudflare Workers via OpenNext
 - visual canon: cream + orange↔green ombré, editorial property imagery, deep green structure
 - first wedge: property/STR professionals + people seeking properties, operators, transformation, investment paths, or services
+
+
+## Stay referral readiness (not yet a partnership)
+
+The `#stays` section uses AYURE's existing operator Join flow.
+Booking.com and Airbnb are **possible distribution channels**, not confirmed
+AYURE partners. No booking inventory, rates, availability, or direct booking
+service is imported. Affiliate links are disabled by default.
+
+Only after an independently confirmed provider approval and a review of its
+link-use terms, set **both** fields in the Workers build environment:
+
+- `NEXT_PUBLIC_AYURE_BOOKING_APPROVED=true` with
+  `NEXT_PUBLIC_AYURE_BOOKING_LINK=https://www.booking.com/...`
+- `NEXT_PUBLIC_AYURE_AIRBNB_APPROVED=true` with
+  `NEXT_PUBLIC_AYURE_AIRBNB_LINK=https://www.airbnb.com/...`
+
+The URL guard requires HTTPS with an exact provider hostname and no
+embedded credentials. Affiliate-network redirectors are not silently allowed;
+review their exact hostname with the agreement before extending the allowlist.
+A deployment flag is an activation control, **not proof** of partnership.
+Links are explicitly disclosed and use `rel="sponsored noopener noreferrer"`.
+
+
+## Shared stay adapter boundary
+
+The stay-adapters module now provides typed, provider-neutral connection results.
+POST /api/stays/connections validates location, optional dates and guest count.
+It deliberately does not request, import, or claim live inventory, reservations
+or commissions. Each channel declares its actual connection status and labels
+availability, reservations and outcome as unverified/not performed.
+
+The existing Stays UI is now backed by this contract. Provider URLs remain
+disabled unless explicitly approved and reviewed under the original PR gate.
+A genuine Booking.com Demand API integration requires managed affiliate access;
+an Airbnb API integration requires separate software partner authorization.

@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import JoinFlow from "./JoinFlow";
+
+export const metadata: Metadata = { alternates: { canonical: "/join" } };
 
 type JoinSearchParams = Promise<{ goal?: string | string[] }>;
 

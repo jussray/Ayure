@@ -132,3 +132,35 @@ test("homepage shows no invented scale, platform endorsement or unlabeled figure
     expect(await img.getAttribute("src")).toMatch(/^\/images\//);
   }
 });
+
+test("homepage uses Juss & Co-inspired scene motion without changing AYURE content", async ({ page }) => {
+  await page.goto("/");
+  const hero = page.getByRole("heading", { name: /Where properties meet opportunity/i });
+  await expect(hero).toBeVisible();
+  await expect(page.locator("html")).toHaveClass(/ayure-motion-ready/);
+  await expect(hero).toHaveClass(/ayure-in-view/);
+
+  const section = page.locator(".how-heading");
+  await section.scrollIntoViewIfNeeded();
+  await expect(section).toHaveClass(/ayure-in-view/);
+  await expect(section).toBeVisible();
+
+  await page.evaluate(() => window.scrollTo(0, 240));
+  await expect(page.locator(".hero-photo img")).toHaveAttribute("style", /transform: translate3d/);
+});
+
+test("motion respects reduced-motion preferences", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /Where properties meet opportunity/i })).toBeVisible();
+  await expect(page.locator("html")).not.toHaveClass(/ayure-motion-ready/);
+  await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
+  await expect(page.locator(".hero-photo img")).toHaveCSS("transform", "none");
+});
+
+test("homepage and join canonical URLs use the www hostname", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://www.ayure.us/");
+  await page.goto("/join");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://www.ayure.us/join");
+});

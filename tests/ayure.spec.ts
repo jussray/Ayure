@@ -160,7 +160,7 @@ test("motion respects reduced-motion preferences", async ({ page }) => {
 
 test("homepage and join canonical URLs use the www hostname", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://www.ayure.us/");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://www.ayure.us");
   await page.goto("/join");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://www.ayure.us/join");
 });

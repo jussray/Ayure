@@ -1,4 +1,5 @@
 import IntentSearch from "../components/IntentSearch";
+import StayChannels from "../components/StayChannels";
 import { Icon } from "../components/icons";
 
 const steps = [
@@ -23,6 +24,7 @@ export default function HomePage() {
           <a href="#explore">Explore</a>
           <a href="#professionals">Professionals</a>
           <a href="#examples">Properties</a>
+          <a href="#stays">Stays</a>
           <a href="#examples">Opportunities</a>
           <a href="#how">About</a>
         </nav>
@@ -114,6 +116,8 @@ export default function HomePage() {
           </div>
         </article>
       </section>
+
+      <StayChannels />
 
       <section className="strip" id="proof">
         <div className="strip-items">

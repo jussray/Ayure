@@ -177,9 +177,9 @@ test("revealed homepage content remains visible when printed", async ({ page }) 
   await expect(card).toHaveCSS("transform", "none");
 });
 
-test("hover depth remains active after cards are revealed", async ({ page }) => {
+test("hover depth remains active after cards are revealed", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "hover depth is verified only in the desktop pointer project");
   await page.goto("/");
-  test.skip(!(await page.evaluate(() => matchMedia("(hover: hover)").matches)), "hover depth is only available on hover-capable pointers");
   const card = page.locator(".cards > .card").first();
   await card.scrollIntoViewIfNeeded();
   await expect(card).toHaveClass(/ayure-in-view/);

@@ -1,6 +1,6 @@
 import "server-only";
 import type { NewAyureLead, InsertedAyureLead } from "./ayure-leads";
-import { requireAyurePool } from "./postgres";
+import { withAyurePostgresClient } from "./postgres";
 
 type InsertedLeadRow = {
   receipt: string;
@@ -9,11 +9,13 @@ type InsertedLeadRow = {
 };
 
 export async function insertAyureLeadPostgres(input: NewAyureLead): Promise<InsertedAyureLead> {
-  const result = await requireAyurePool().query<InsertedLeadRow>(
-    `INSERT INTO public.ayure_leads (role, name, email, goal, receipt)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING receipt, status, created_at`,
-    [input.role, input.name, input.email, input.goal, input.receipt],
+  const result = await withAyurePostgresClient((client) =>
+    client.query<InsertedLeadRow>(
+      `INSERT INTO public.ayure_leads (role, name, email, goal, receipt)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING receipt, status, created_at`,
+      [input.role, input.name, input.email, input.goal, input.receipt],
+    ),
   );
   const row = result.rows[0];
   if (result.rowCount !== 1 || !row || row.receipt !== input.receipt || row.status !== "received") {

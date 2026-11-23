@@ -132,3 +132,62 @@ test("homepage shows no invented scale, platform endorsement or unlabeled figure
     expect(await img.getAttribute("src")).toMatch(/^\/images\//);
   }
 });
+
+
+test("stay pathway routes operators to existing join flow without claiming inventory", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Great stays start with great operators." })).toBeVisible();
+  await expect(page.getByText("Connection pending")).toHaveCount(2);
+  await expect(page.getByRole("link", { name: /external affiliate link/ })).toHaveCount(0);
+  await page.getByRole("link", { name: "Join as a stay operator" }).click();
+  await expect(page).toHaveURL(/join\?goal=/);
+  await expect(page.getByLabel("What are you trying to make happen?")).toHaveValue(
+    "I operate short-term rentals and want to join the AYURE network",
+  );
+});
+
+test("affiliate links reject unapproved, unsafe, or lookalike destinations", async () => {
+  const { approvedAffiliateHref } = await import("../lib/ayure/stay-affiliates");
+  expect(approvedAffiliateHref("booking", "https://www.booking.com/?aid=123", false)).toBeNull();
+  expect(approvedAffiliateHref("booking", "http://www.booking.com/?aid=123", true)).toBeNull();
+  expect(approvedAffiliateHref("booking", "https://booking.com.evil.example/", true)).toBeNull();
+  expect(approvedAffiliateHref("booking", "https://user:pass@booking.com/", true)).toBeNull();
+  expect(approvedAffiliateHref("airbnb", "https://www.booking.com/", true)).toBeNull();
+  expect(approvedAffiliateHref("booking", "https://www.booking.com/?aid=123", true)).toBe("https://www.booking.com/?aid=123");
+  expect(approvedAffiliateHref("airbnb", "https://www.airbnb.com/rooms/1", true)).toBe("https://www.airbnb.com/rooms/1");
+});
+
+
+test("stay connection adapters reject bad requests and never invent inventory", async ({ request }) => {
+  const result = await request.post("/api/stays/connections", {
+    data: { location: "Pittsburgh", checkIn: "2026-12-10", checkOut: "2026-12-13", guests: 3 },
+  });
+  expect(result.ok()).toBeTruthy();
+  const data = await result.json();
+  expect(data.search).toEqual({ location: "Pittsburgh", checkIn: "2026-12-10", checkOut: "2026-12-13", guests: 3 });
+  expect(data.inventory).toBe("not_available");
+  expect(data.booking).toBe("external_provider_only");
+  expect(data.channels.map((channel: { id: string }) => channel.id)).toEqual(["booking", "airbnb"]);
+  for (const channel of data.channels) {
+    expect(channel.status).toBe("connection_pending");
+    expect(channel.href).toBeNull();
+    expect(channel.availability).toBe("not_checked");
+    expect(channel.reservation).toBe("not_processed");
+    expect(channel.outcome).toBe("unverified");
+  }
+});
+
+test("stay connection adapters reject invalid input", async ({ request }) => {
+  for (const search of [
+    { location: "Pittsburgh", checkIn: "2026-12-14", checkOut: "2026-12-13" },
+    { location: "Pittsburgh", checkIn: "2026-02-30", checkOut: "2026-03-04" },
+    { location: "Pittsburgh", guests: 0 },
+    { location: "Pittsburgh", guests: 1.5 },
+    { location: "x".repeat(121) },
+  ]) {
+    const response = await request.post("/api/stays/connections", { data: search });
+    expect(response.status()).toBe(400);
+  }
+  const huge = await request.post("/api/stays/connections", { data: { location: "x".repeat(4200) } });
+  expect(huge.status()).toBe(413);
+});
